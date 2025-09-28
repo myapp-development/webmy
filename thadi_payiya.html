@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta name="monetag" content="c29eb5df6574ef21e2624c4c6d7fedac">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>leak</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&amp;family=Montserrat:wght@400;600;700&amp;display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(45deg, #1e3c72, #2a5298);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #333;
+        }
+
+        .main-container {
+            width: 90%;
+            max-width: 600px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 30px 20px;
+        }
+
+        .header h1 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1rem;
+        }
+
+        .user-stats-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            background: #f0f4f8;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .user-stat-card {
+            text-align: center;
+            margin-bottom: 15px;
+            width: 100%;
+        }
+
+        .user-stat-card:last-child {
+            margin-bottom: 0;
+        }
+
+        @media (max-width: 480px) {
+            .user-stats-section {
+                flex-direction: column;
+            }
+            .user-stat-card {
+                min-width: unset;
+            }
+        }
+
+        .user-stat-number {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #2a5298;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .user-stat-label {
+            font-size: 0.85rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .content-area {
+            padding: 40px 30px;
+            text-align: center;
+            min-height: 400px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        /* Verification Phase Styles */
+        .verification-container {
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .step-circle {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin: 0 10px;
+            transition: all 0.3s ease;
+        }
+
+        .step-circle.active {
+            background: #667eea;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .step-circle.completed {
+            background: #4caf50;
+            color: white;
+        }
+
+        .verification-info {
+            margin-bottom: 30px;
+        }
+
+        .verification-info h2 {
+            font-family: 'Montserrat', sans-serif;
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 1.5rem;
+        }
+
+        .verification-info p {
+            color: #666;
+            line-height: 1.6;
+        }
+
+        .action-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 20px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .action-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .timer-section {
+            background: #fff3cd;
+            border: 1px solid #ffeaa7;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .timer-text {
+            color: #856404;
+            font-weight: 500;
+        }
+
+        /* New styles for ads tracking */
+        .ads-status {
+            background: #e3f2fd;
+            border: 1px solid #2196f3;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .ads-status-text {
+            color: #1976d2;
+            font-weight: 500;
+        }
+
+        .ads-status-text.error {
+            color: #d32f2f; /* Red color for error messages */
+            font-weight: bold;
+        }
+
+        .ads-progress {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 15px;
+            gap: 10px;
+        }
+
+        .ads-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .ads-circle.completed {
+            background: #4caf50;
+            color: white;
+        }
+
+        .ads-circle.active {
+            background: #ff9800;
+            color: white;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        /* Success Phase Styles */
+        .success-container {
+            display: none;
+            animation: slideInUp 0.6s ease-out;
+        }
+
+        .success-container.show {
+            display: block;
+        }
+
+        .success-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+
+        .success-title {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2rem;
+            color: #4caf50;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .success-message {
+            color: #666;
+            font-size: 1.1rem;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .final-access-btn {
+            background: linear-gradient(135deg, #4caf50 0%, #45a049 100%);
+            color: white;
+            text-decoration: none;
+            padding: 18px 50px;
+            border-radius: 50px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            display: inline-block;
+            transition: all 0.3s ease;
+            margin-bottom: 30px;
+        }
+
+        .final-access-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 30px rgba(76, 175, 80, 0.3);
+        }
+
+        .completion-info {
+            display: flex;
+            justify-content: space-around;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .completion-stat {
+            text-align: center;
+        }
+
+        .completion-stat-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4caf50;
+            display: block;
+        }
+
+        .completion-stat-label {
+            font-size: 0.9rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideInUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-container {
+                width: 95%;
+                margin: 20px;
+            }
+            
+            .content-area {
+                padding: 30px 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .success-title {
+                font-size: 1.7rem;
+            }
+            
+            .completion-info {
+                flex-direction: column;
+                gap: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <div class="header">
+            <h1>🔐 SL FUNNY HUB</h1>
+            <p>කෙදිරිගාද්දි බස්සන තඩි පයිය</p>
+        </div>
+
+        <div class="user-stats-section">
+            <div class="user-stat-card">
+                <span class="user-stat-number" id="activeUsers"></span>
+                <span class="user-stat-label">Active Users</span>
+            </div>
+            <div class="user-stat-card">
+                <span class="user-stat-number" id="completedUsers"></span>
+                <span class="user-stat-label">මේ වීඩියෝ එක බලපු අය</span>
+            </div>
+        </div>
+
+        <div class="content-area" id="contentArea">
+            <!-- Verification Phase -->
+            <div class="verification-container" id="verificationContainer">
+                <div class="step-indicator">
+                    <div class="step-circle active" id="step1">1</div>
+                    <div class="step-circle" id="step2">2</div>
+                    <div class="step-circle" id="step3">3</div>
+                </div>
+
+                <div class="verification-info" id="verificationInfoText">
+                    <h2>🛡️ Secure Access 🛡️</h2>
+                    <p>වීඩියෝ එක Unlock වෙන්න නම් හැම Ad එකකම තත්පර 10ක් ඉන්න වෙනවා හොදේ</p>
+                </div>
+
+                <button class="action-btn" id="verifyBtn">
+                    🚀 Start Verification Process
+                </button>
+
+                <div class="timer-section" id="timerSection">
+                    <div class="timer-text">
+                        ⏱️ Processing verification... <span id="countdown">10</span> seconds remaining
+                    </div>
+                </div>
+
+                <div class="ads-status" id="adsStatus">
+                    <div class="ads-status-text" id="adsStatusText">
+                        📺 Please stay on the ads page for 10 seconds...
+                    </div>
+                    <div class="ads-progress">
+                        <div class="ads-circle" id="adsProgress1">1</div>
+                        <div class="ads-circle" id="adsProgress2">2</div>
+                        <div class="ads-circle" id="adsProgress3">3</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Success Phase -->
+            <div class="success-container" id="successContainer">
+                <div class="success-icon">🎉</div>
+                <div class="success-title">Video Successfully Unlocked</div>
+                <div class="success-message">
+                    You have successfully completed all verification steps!
+                </div>
+                
+                <a href="https://t.me/SL_FUNNY_BOT?start=BQADAQADOgkAAgFt0EZiGow6sngAASAWBA" 
+                   class="final-access-btn" 
+                   target="_blank">
+                    🎯 Access Your Premium Content
+                </a>
+
+                <div class="completion-info">
+                    <div class="completion-stat">
+                        <span class="completion-stat-value" id="timeValue">1:45</span>
+                        <span class="completion-stat-label">Time Taken</span>
+                    </div>
+                    <div class="completion-stat">
+                        <span class="completion-stat-value">100%</span>
+                        <span class="completion-stat-label">Success Rate</span>
+                    </div>
+                    <div class="completion-stat">
+                        <span class="completion-stat-value">Premium</span>
+                        <span class="completion-stat-label">Quality</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+       
+    <script src="https://aiharsoreersu.net/act/files/tag.min.js?z=9943396" data-cfasync="false" async></script>
+    <script>(function(s){s.dataset.zone='9943402',s.src='https://forfrogadiertor.com/tag.min.js'})([document.documentElement, document.body].filter(Boolean).pop().appendChild(document.createElement('script')))</script>
+
+
+    <script>
+        class EnhancedVerificationSystem {
+            constructor() {
+                this.currentStep = 0;
+                this.maxSteps = 3;
+                this.startTime = Date.now();
+                this.monetizedLink = "https://otieu.com/4/9926995"; 
+                
+                // Ads tracking variables
+                this.adsCompletedCount = 0;
+                this.requiredAdsViews = 3;
+                this.adsViewDuration = 10; // 10 seconds
+                this.currentAdsWindow = null;
+                this.adsStartTime = null;
+                this.adsTimer = null;
+                this.windowCheckInterval = null;
+                this.adViewSuccessful = false; // New flag to track successful ad view
+                
+                this.elements = {
+                    verifyBtn: document.getElementById("verifyBtn"),
+                    timerSection: document.getElementById("timerSection"),
+                    countdown: document.getElementById("countdown"),
+                    verificationContainer: document.getElementById("verificationContainer"),
+                    successContainer: document.getElementById("successContainer"),
+                    timeValue: document.getElementById("timeValue"),
+                    activeUsers: document.getElementById("activeUsers"),
+                    completedUsers: document.getElementById("completedUsers"),
+                    adsStatus: document.getElementById("adsStatus"),
+                    adsStatusText: document.getElementById("adsStatusText"),
+                    adsProgress1: document.getElementById("adsProgress1"),
+                    adsProgress2: document.getElementById("adsProgress2"),
+                    adsProgress3: document.getElementById("adsProgress3"),
+                    verificationInfoText: document.getElementById("verificationInfoText") // New element
+                };
+
+                this.initializeEvents();
+                this.initializeUserCounters();
+                this.startUserCounterRotation();
+            }
+
+            initializeUserCounters() {
+                const initialActive = Math.floor(Math.random() * (15000 - 14000 + 1)) + 14000;
+                const initialCompleted = Math.floor(Math.random() * (6000 - 5500 + 1)) + 5500;
+                this.elements.activeUsers.textContent = initialActive.toLocaleString();
+                this.elements.completedUsers.textContent = initialCompleted.toLocaleString();
+            }
+
+            startUserCounterRotation() {
+                setInterval(() => {
+                    const currentActive = parseInt(this.elements.activeUsers.textContent.replace(/,/g, ""));
+                    const currentCompleted = parseInt(this.elements.completedUsers.textContent.replace(/,/g, ""));
+
+                    const newActive = currentActive + Math.floor(Math.random() * 50) - 25;
+                    const newCompleted = currentCompleted + Math.floor(Math.random() * 2) + 3;
+
+                    this.elements.activeUsers.textContent = Math.max(14000, Math.min(15000, newActive)).toLocaleString();
+                    this.elements.completedUsers.textContent = Math.max(5500, Math.min(6000, newCompleted)).toLocaleString();
+                }, 15000);
+            }
+
+            initializeEvents() {
+                this.elements.verifyBtn.addEventListener('click', () => this.handleVerification());
+                
+                // Prevent common shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey && ['s', 'u', 'i', 'j'].includes(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+                
+                document.addEventListener('contextmenu', e => e.preventDefault());
+
+                // Listen for window focus/blur to track ads viewing
+                window.addEventListener('focus', () => this.handleWindowFocus());
+                window.addEventListener('blur', () => this.handleWindowBlur());
+            }
+
+            handleVerification() {
+                // Hide the verification info text
+                if (this.elements.verificationInfoText) {
+                    this.elements.verificationInfoText.style.display = 'none';
+                }
+
+                if (this.adsCompletedCount >= this.requiredAdsViews) {
+                    this.showSuccess(); // Directly show success if all ads are completed
+                    return;
+                }
+
+                // Only update step indicator if it's a new step, not a retry
+                if (this.currentStep < this.adsCompletedCount + 1) {
+                    this.currentStep = this.adsCompletedCount + 1;
+                    this.updateStepIndicator();
+                }
+                
+                this.openMonetizedLinkWithTracking();
+                
+                this.elements.verifyBtn.textContent = `🔄 Processing Ad View ${this.adsCompletedCount + 1}...`;
+                this.elements.verifyBtn.disabled = true;
+                this.elements.adsStatus.style.display = 'block';
+                this.elements.adsStatusText.classList.remove('error'); // Clear any previous error state
+                this.updateAdsProgress();
+            }
+
+            updateStepIndicator() {
+                for (let i = 1; i <= 3; i++) {
+                    const stepElement = document.getElementById(`step${i}`);
+                    if (i < this.currentStep) {
+                        stepElement.className = 'step-circle completed';
+                    } else if (i === this.currentStep) {
+                        stepElement.className = 'step-circle active';
+                    } else {
+                        stepElement.className = 'step-circle';
+                    }
+                }
+            }
+
+            openMonetizedLinkWithTracking() {
+                const params = new URLSearchParams({
+                    step: this.adsCompletedCount + 1,
+                    timestamp: Date.now(),
+                    session_time: Date.now() - this.startTime,
+                    user_agent: navigator.userAgent,
+                    screen_resolution: `${screen.width}x${screen.height}`
+                });
+
+                const enhancedLink = `${this.monetizedLink}&${params.toString()}`;
+                this.currentAdsWindow = window.open(enhancedLink, '_blank');
+                this.adsStartTime = Date.now();
+                this.adViewSuccessful = false; // Reset flag for new ad view
+                
+                // Start tracking the ads window
+                this.startAdsTracking();
+            }
+
+            startAdsTracking() {
+                let timeLeft = this.adsViewDuration;
+                this.elements.adsStatusText.textContent = `📺 Stay on ads page for ${timeLeft} seconds... (${this.adsCompletedCount + 1}/${this.requiredAdsViews})`;
+                
+                // Check if ads window is still open
+                this.windowCheckInterval = setInterval(() => {
+                    if (this.currentAdsWindow && this.currentAdsWindow.closed) {
+                        this.handleAdsWindowClosed();
+                    }
+                }, 500); // Check more frequently
+
+                // Start countdown timer
+                this.adsTimer = setInterval(() => {
+                    timeLeft--;
+                    this.elements.adsStatusText.textContent = `📺 Stay on ads page for ${timeLeft} seconds... (${this.adsCompletedCount + 1}/${this.requiredAdsViews})`;
+
+                    if (timeLeft <= 0) {
+                        this.adViewSuccessful = true; // Mark as successful
+                        this.handleAdsCompleted();
+                    }
+                }, 1000);
+            }
+
+            clearAdsTimers() {
+                if (this.adsTimer) {
+                    clearInterval(this.adsTimer);
+                    this.adsTimer = null;
+                }
+                if (this.windowCheckInterval) {
+                    clearInterval(this.windowCheckInterval);
+                    this.windowCheckInterval = null;
+                }
+            }
+
+            handleAdsCompleted() {
+                this.clearAdsTimers();
+
+                // Close the ads window if still open
+                if (this.currentAdsWindow && !this.currentAdsWindow.closed) {
+                    this.currentAdsWindow.close();
+                }
+
+                if (this.adViewSuccessful) {
+                    this.adsCompletedCount++;
+                    this.updateAdsProgress();
+
+                    if (this.adsCompletedCount >= this.requiredAdsViews) {
+                        this.elements.adsStatusText.textContent = `✅ All ads viewing completed! (${this.adsCompletedCount}/${this.requiredAdsViews})`;
+                        setTimeout(() => {
+                            this.showSuccess();
+                        }, 2000);
+                    } else {
+                        this.elements.adsStatusText.textContent = `✅ Ads view ${this.adsCompletedCount} completed! Click to continue...`;
+                        this.elements.verifyBtn.textContent = `🚀 Continue to Ad View ${this.adsCompletedCount + 1}`;
+                        this.elements.verifyBtn.disabled = false;
+                        this.elements.adsStatus.style.display = 'none';
+                    }
+                } else {
+                    // This case should ideally not be hit if adViewSuccessful is properly managed
+                    // However, keeping it for robustness
+                    this.elements.adsStatusText.textContent = `❌ Ad view failed. Please try again.`;
+                    this.elements.adsStatusText.classList.add('error');
+                    this.elements.verifyBtn.textContent = `🔄 Retry Ad View ${this.adsCompletedCount + 1}`;
+                    this.elements.verifyBtn.disabled = false;
+                    this.elements.adsStatus.style.display = 'block'; // Keep status visible for error
+                }
+            }
+
+            handleAdsWindowClosed() {
+                this.clearAdsTimers();
+                this.adViewSuccessful = false; // Ensure it's marked as unsuccessful
+                
+                this.elements.adsStatusText.textContent = `❌ Ads window closed too early! Please try again.`;
+                this.elements.adsStatusText.classList.add('error'); // Add error class for styling
+                this.elements.verifyBtn.textContent = `🔄 Retry Ad View ${this.adsCompletedCount + 1}`;
+                this.elements.verifyBtn.disabled = false;
+                this.elements.adsStatus.style.display = 'block'; // Keep status visible for error
+            }
+
+            handleWindowFocus() {
+                // User returned to main window
+                // If an ad window was open and not yet successful, treat as premature close
+                if (this.adsTimer && this.currentAdsWindow && !this.currentAdsWindow.closed && !this.adViewSuccessful) {
+                    this.handleAdsWindowClosed();
+                }
+            }
+
+            handleWindowBlur() {
+                // User left main window (probably to ads window)
+            }
+
+            updateAdsProgress() {
+                const progressElements = [this.elements.adsProgress1, this.elements.adsProgress2, this.elements.adsProgress3];
+                
+                progressElements.forEach((element, index) => {
+                    element.className = 'ads-circle'; // Reset all classes first
+                    if (index < this.adsCompletedCount) {
+                        element.classList.add('completed');
+                    } else if (index === this.adsCompletedCount && this.adsCompletedCount < this.requiredAdsViews) {
+                        element.classList.add('active');
+                    }
+                });
+            }
+
+            showSuccess() {
+                const totalTime = Math.floor((Date.now() - this.startTime) / 1000);
+                const minutes = Math.floor(totalTime / 60);
+                const seconds = totalTime % 60;
+                this.elements.timeValue.textContent = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                this.elements.verificationContainer.style.display = 'none';
+                this.elements.successContainer.classList.add('show');
+            }
+        }
+
+        // Initialize the system when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new EnhancedVerificationSystem();
+        });
+
+        // Additional security measures
+        (function() {
+            'use strict';
+            
+            // Disable developer tools
+            let devtools = {
+                open: false,
+                orientation: null
+            };
+            
+            setInterval(() => {
+                if (window.outerHeight - window.innerHeight > 200 || window.outerWidth - window.innerWidth > 200) {
+                    if (!devtools.open) {
+                        devtools.open = true;
+                        window.location.reload();
+                    }
+                } else {
+                    devtools.open = false;
+                }
+            }, 500);
+            
+            // Disable right-click and F12
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && e.key === 'I')) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+        })();
+    </script>
+</body>
+
+</html>
